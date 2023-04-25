@@ -1,16 +1,22 @@
-import axios from "axios";
 import { useState } from "react";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
-import { useGetPostsQuery } from "../features/webPostsSlice";
+import { Link, useParams } from "react-router-dom";
+import {
+  useGetPostQuery,
+  useDeletePostMutation,
+} from "../features/webPostsSlice";
+import postIdSlice from "../features/postIdSlice";
 import { setId, getId } from "../features/postIdSlice";
 import { store } from "../features/store";
 
-const Home = () => {
-  const dispatch = useDispatch();
+const SinglePost = () => {
   const [displayLoading, setDisplayLoading] = useState(true);
-  const { data, isLoading, error } = useGetPostsQuery();
+  const { data, isLoading, error } = useGetPostQuery(
+    store.getState().postId.value
+  );
+
+  const [postDelete, setpostDelete] = useState(2);
 
   useEffect(() => {
     setTimeout(() => {
@@ -18,6 +24,13 @@ const Home = () => {
     }, 2000);
   }, []);
 
+  const [deletePost, { isLoading: deleteConfirmation }] =
+    useDeletePostMutation();
+
+  const removePost = () => {
+    console.log(store.getState().postId.value);
+    deletePost(store.getState().postId.value);
+  };
   return (
     <>
       {displayLoading == true ? (
@@ -72,34 +85,68 @@ const Home = () => {
           <>
             <h2 className=" mb-10">Here are your Posts so Far!</h2>
             <>
-              {data.map((post) => {
-                return (
-                  <Link
-                    to="/posts/:id"
-                    onClick={() => {
-                      store.dispatch(setId(post.id));
-                    }}
-                  >
-                    <div class=" shadow-lg border border-x-slate-800 rounded-lg mb-9 hover:bg-blue-300 hover:translate-y-3 ease-in-out ">
-                      <h2 class=" text-center mb-3">{post.title}</h2>
-                      <img
-                        class="w-24 h-24 rounded-full mx-auto"
-                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR9p_JUHVJHJEaUiC01bk2YBhi2LuLour7qx47Fu_BgyRE6q4o&usqp=CAU&ec=48600113"
-                        alt=""
-                        width="250"
-                        height="400"
-                      />
-                      <h4 class="align-center">{post.content}</h4>
-                    </div>
-                  </Link>
-                );
-              })}
+              {
+                <Link to="/posts/:id" onClick={() => {}}>
+                  <div class=" shadow-lg border border-x-slate-800 rounded-lg mb-9 hover:bg-blue-300 hover:translate-y-3 ease-in-out ">
+                    <h2 class=" text-center mb-3">{data.title}</h2>
+                    <img
+                      class="w-24 h-24 rounded-full mx-auto"
+                      src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR9p_JUHVJHJEaUiC01bk2YBhi2LuLour7qx47Fu_BgyRE6q4o&usqp=CAU&ec=48600113"
+                      alt=""
+                      width="300"
+                      height="500"
+                    />
+                    <h4 class="align-center">{data.content}</h4>
+                    <h5 class="align-left text-left mt-5">
+                      Last Updated: {data.last_updated}
+                    </h5>
+                    <h5 class="align-left text-left mt-5">
+                      Originally Published: {data.originally_published}
+                    </h5>
+                  </div>
+                </Link>
+              }
             </>
           </>
         )
       )}
-    </>
+      <div>
+        <button
+          className=" border p-4 shadow-lg rounded-lg bg-red-500"
+          onClick={() => {
+            removePost();
+            setpostDelete(1);
+          }}
+        >
+          Delete Post
+        </button>
+        <Link to="/posts/:id/edit">
+          <button class="border ml-3 p-4 shadow-lg rounded-lg bg-blue-300">
+            Edit Post
+          </button>
+        </Link>
+      </div>
+      <div>
+        {(() => {
+          switch (postDelete) {
+            case 0:
+              return (
+                <p className="text-red-500">
+                  Post Cannot be Deleted, A team of highly trained Monkeys is
+                  working to resolve the issue
+                </p>
+              );
+            case 1:
+              return (
+                <p className="text-green-500">Post Deleted Sucessfully!</p>
+              );
+            default:
+              return <p></p>;
+          }
+        })()}
+      </div>
+    </> ///
   );
 };
 
-export default Home;
+export default SinglePost;
